@@ -1,7 +1,7 @@
 {
   "name": "reelfaceless-mcp",
   "version": "0.1.0",
-  "description": "MCP server for the ReelFaceless public API — schedule short-form video posts from any MCP client.",
+  "description": "MCP server for the ReelFaceless public API \u2014 schedule short-form video posts from any MCP client.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -18,7 +18,8 @@
   ],
   "scripts": {
     "build": "esbuild src/index.ts --bundle --platform=node --target=node18 --format=esm --banner:js=\"#!/usr/bin/env node\" --outfile=dist/index.js --external:@modelcontextprotocol/sdk --external:zod",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "prepare": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
