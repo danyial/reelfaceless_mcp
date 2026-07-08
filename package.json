@@ -1,7 +1,7 @@
 {
   "name": "reelfaceless-mcp",
   "version": "0.1.0",
-  "description": "MCP server for the ReelFaceless public API \u2014 schedule short-form video posts from any MCP client.",
+  "description": "MCP server for the ReelFaceless public API — schedule short-form video posts from any MCP client.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -26,6 +26,7 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@types/node": "^20.19.43",
     "esbuild": "^0.28.1",
     "typescript": "^5"
   },
