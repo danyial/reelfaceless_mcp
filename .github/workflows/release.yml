@@ -1,32 +1,65 @@
 name: Release
 
+# Flow: feature/bugfix branch → PR into main → merge → this workflow
+# tags the merge commit (auto patch bump), publishes a GitHub release
+# with the bundled server, and optionally publishes to npm.
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
 
 permissions:
   contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # tags needed for version calculation
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           registry-url: https://registry.npmjs.org
       - run: npm ci
+      - run: npx tsc --noEmit
       - run: npm run build
+
+      - name: Compute next version (patch bump on latest tag)
+        id: version
+        run: |
+          LAST=$(git tag --list 'v*' --sort=-v:refname | head -1)
+          if [ -z "$LAST" ]; then
+            NEXT="v$(node -p "require('./package.json').version")"
+          else
+            NEXT=$(echo "$LAST" | awk -F. '{printf "%s.%s.%d", $1, $2, $3+1}')
+          fi
+          echo "next=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "Releasing $NEXT (previous: ${LAST:-none})"
+
+      - name: Tag merge commit
+        run: |
+          git tag "${{ steps.version.outputs.next }}"
+          git push origin "${{ steps.version.outputs.next }}"
+
       - name: GitHub release with bundled server
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.next }}
           files: dist/index.js
           generate_release_notes: true
+
       # Publishes to npm only when an NPM_TOKEN repo secret is configured.
       - name: Publish to npm (optional)
         if: ${{ env.NODE_AUTH_TOKEN != '' }}
-        run: npm publish --access public
+        run: |
+          VERSION="${{ steps.version.outputs.next }}"
+          npm version --no-git-tag-version "${VERSION#v}"
+          npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
