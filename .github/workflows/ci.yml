@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run build
+      # Smoke: server must boot and report ready on stderr.
+      - name: Boot smoke test
+        run: |
+          REELFACELESS_API_KEY=rf_ci_dummy node dist/index.js < /dev/null > out.log 2>&1 &
+          PID=$!
+          for i in $(seq 1 20); do
+            grep -q "reelfaceless-mcp ready" out.log && break
+            sleep 1
+          done
+          kill $PID || true
+          grep "reelfaceless-mcp ready" out.log
