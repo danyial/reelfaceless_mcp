@@ -14,10 +14,8 @@ plan and up). Plan quotas and rate limits apply automatically.
 ```bash
 claude mcp add reelfaceless \
   --env REELFACELESS_API_KEY=rf_your_key \
-  -- npx -y github:danyial/reelfaceless_mcp
+  -- npx -y reelfaceless-mcp@latest
 ```
-
-(Once published to npm, `npx -y reelfaceless-mcp` works too.)
 
 **Claude Desktop** (`claude_desktop_config.json`)
 
@@ -26,7 +24,7 @@ claude mcp add reelfaceless \
   "mcpServers": {
     "reelfaceless": {
       "command": "npx",
-      "args": ["-y", "github:danyial/reelfaceless_mcp"],
+      "args": ["-y", "reelfaceless-mcp@latest"],
       "env": { "REELFACELESS_API_KEY": "rf_your_key" }
     }
   }
