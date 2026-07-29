@@ -38,10 +38,12 @@ Optional: `REELFACELESS_BASE_URL` to point at a different instance.
 | Tool | Purpose |
 |---|---|
 | `list_channels` | Connected channels incl. posting schedule (needed for channel IDs) |
+| `get_channel_info` | TikTok posting constraints: allowed privacy levels, disabled interactions, max duration |
 | `upload_video` | Upload a local MP4/MOV/WebM (max 500 MB), returns `media_id` |
 | `create_post` | Schedule a post across channels — queue slots or a fixed time |
 | `list_posts` | List posts, newest first, optional status filter |
 | `get_post_status` | Per-channel status, remote URLs, error details |
+| `publish_post_now` | Publish a scheduled post immediately instead of waiting for its slot |
 | `get_post_metrics` | Latest views/likes/comments per channel for a published post |
 
 Example prompt: *"Upload ~/exports/recap.mp4 and add it to the queue for all
