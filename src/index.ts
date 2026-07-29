@@ -159,11 +159,17 @@ server.registerTool(
       "made_for_kids, contains_synthetic_media (AI disclosure), tags (string[]), " +
       "category_id, default_language (BCP-47), notify_subscribers, embeddable, " +
       "license (youtube|creativeCommon), public_stats_viewable. " +
-      "TikTok settings: caption, privacy_level (PUBLIC_TO_EVERYONE|" +
+      "TikTok settings: post_mode (direct|inbox), caption, privacy_level " +
+      "(PUBLIC_TO_EVERYONE|" +
       "MUTUAL_FOLLOW_FRIENDS|FOLLOWER_OF_CREATOR|SELF_ONLY), disable_comment, " +
       "disable_duet, disable_stitch, video_cover_timestamp_ms, " +
       "brand_organic_toggle, brand_content_toggle, is_aigc (AI label). " +
-      "Constraint: brand_content_toggle cannot be combined with SELF_ONLY. For TikTok, call get_channel_info first — only the privacy levels it returns are valid for that account.",
+      "Constraint: brand_content_toggle cannot be combined with SELF_ONLY. " +
+      "post_mode 'inbox' uploads the video to the creator's TikTok drafts " +
+      "instead of publishing it — they add caption and effects in the app, so " +
+      "every other TikTok setting is ignored and no public URL comes back. " +
+      "For direct posts, call get_channel_info first — only the privacy levels " +
+      "it returns are valid for that account.",
     inputSchema: {
       title: z.string().min(1).max(150),
       body: z.string().max(5000).optional().describe("Default caption/description for all channels"),
