@@ -83,6 +83,27 @@ server.registerTool(
 );
 
 server.registerTool(
+  "get_channel_info",
+  {
+    description:
+      "Get live posting constraints for a TikTok channel straight from the " +
+      "platform: which privacy levels the account allows, whether comments/duet/" +
+      "stitch are disabled account-side, and the max video duration. Call this " +
+      "before create_post for TikTok — TikTok's content-sharing guidelines " +
+      "require honouring these, and guessing an unavailable privacy level fails " +
+      "the post. YouTube channels are not supported.",
+    inputSchema: { channel_id: z.string().uuid() },
+  },
+  async ({ channel_id }) => {
+    try {
+      return ok(await api(`/channels/${channel_id}/info`));
+    } catch (error) {
+      return fail(error);
+    }
+  },
+);
+
+server.registerTool(
   "upload_video",
   {
     description:
@@ -142,7 +163,7 @@ server.registerTool(
       "MUTUAL_FOLLOW_FRIENDS|FOLLOWER_OF_CREATOR|SELF_ONLY), disable_comment, " +
       "disable_duet, disable_stitch, video_cover_timestamp_ms, " +
       "brand_organic_toggle, brand_content_toggle, is_aigc (AI label). " +
-      "Constraint: brand_content_toggle cannot be combined with SELF_ONLY.",
+      "Constraint: brand_content_toggle cannot be combined with SELF_ONLY. For TikTok, call get_channel_info first — only the privacy levels it returns are valid for that account.",
     inputSchema: {
       title: z.string().min(1).max(150),
       body: z.string().max(5000).optional().describe("Default caption/description for all channels"),
@@ -225,6 +246,37 @@ server.registerTool(
   async ({ post_id }) => {
     try {
       return ok(await api(`/posts/${post_id}`));
+    } catch (error) {
+      return fail(error);
+    }
+  },
+);
+
+server.registerTool(
+  "publish_post_now",
+  {
+    description:
+      "Publish a scheduled post right away instead of waiting for its slot. " +
+      "The worker picks it up within about 30 seconds. Pass channel_id to " +
+      "publish only that channel's target. Fails if nothing is scheduled " +
+      "anymore (already published, canceled, or currently publishing).",
+    inputSchema: {
+      post_id: z.string().uuid(),
+      channel_id: z
+        .string()
+        .uuid()
+        .optional()
+        .describe("Limit to one channel; omit to publish every scheduled target"),
+    },
+  },
+  async ({ post_id, channel_id }) => {
+    try {
+      return ok(
+        await api(`/posts/${post_id}/publish`, {
+          method: "POST",
+          body: JSON.stringify(channel_id ? { channel_id } : {}),
+        }),
+      );
     } catch (error) {
       return fail(error);
     }
