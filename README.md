@@ -43,6 +43,7 @@ Optional: `REELFACELESS_BASE_URL` to point at a different instance.
 | `create_post` | Schedule a post across channels — queue slots or a fixed time |
 | `list_posts` | List posts, newest first, optional status filter |
 | `get_post_status` | Per-channel status, remote URLs, error details |
+| `update_post` | Edit a scheduled post: content, per-channel settings, timing, channels |
 | `publish_post_now` | Publish a scheduled post immediately instead of waiting for its slot |
 | `get_post_metrics` | Latest views/likes/comments per channel for a published post |
 

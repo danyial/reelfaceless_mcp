@@ -259,6 +259,60 @@ server.registerTool(
 );
 
 server.registerTool(
+  "update_post",
+  {
+    description:
+      "Edit a post that has not gone out yet: title, body, per-channel settings, " +
+      "schedule and which channels it targets. Send the FULL target list — " +
+      "channels you omit are removed from the post. The video cannot be changed. " +
+      "Targets that already published stay untouched and keep their channel; if " +
+      "every target has published the call fails with nothing_editable. Settings " +
+      "follow the same shape as create_post.",
+    inputSchema: {
+      post_id: z.string().uuid(),
+      title: z.string().min(1).max(150),
+      body: z.string().max(5000).optional().describe("Default caption/description for all channels"),
+      targets: z
+        .array(
+          z.object({
+            channel_id: z.string().uuid(),
+            settings: z.record(z.unknown()).optional(),
+          }),
+        )
+        .min(1),
+      schedule_mode: z.enum(["queue", "custom"]),
+      scheduled_at: z.string().datetime().optional().describe("Required for schedule_mode 'custom'"),
+    },
+  },
+  async ({ post_id, title, body, targets, schedule_mode, scheduled_at }) => {
+    try {
+      if (schedule_mode === "custom" && !scheduled_at) {
+        throw new ApiError("scheduled_at is required for schedule_mode 'custom'");
+      }
+      return ok(
+        await api(`/posts/${post_id}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            title,
+            body: body ?? "",
+            targets: targets.map((t) => ({
+              channel_id: t.channel_id,
+              settings: t.settings ?? {},
+            })),
+            schedule:
+              schedule_mode === "queue"
+                ? { mode: "queue" }
+                : { mode: "custom", at: scheduled_at },
+          }),
+        }),
+      );
+    } catch (error) {
+      return fail(error);
+    }
+  },
+);
+
+server.registerTool(
   "publish_post_now",
   {
     description:
