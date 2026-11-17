@@ -45,6 +45,7 @@ Optional: `REELFACELESS_BASE_URL` to point at a different instance.
 | `get_post_status` | Per-channel status, remote URLs, error details |
 | `update_post` | Edit a scheduled post: content, per-channel settings, timing, channels |
 | `publish_post_now` | Publish a scheduled post immediately instead of waiting for its slot |
+| `cancel_post` | Cancel a scheduled post (or one channel of it) before it goes out |
 | `get_post_metrics` | Latest views/likes/comments per channel for a published post |
 
 Example prompt: *"Upload ~/exports/recap.mp4 and add it to the queue for all

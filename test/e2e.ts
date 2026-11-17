@@ -99,6 +99,42 @@ async function main() {
     console.log("7) get_post_metrics: kein published Post — übersprungen");
   }
 
+  // Title-only edit must keep the caption; then cancel, then cancel again.
+  parse(
+    await client.callTool({
+      name: "update_post",
+      arguments: {
+        post_id: created.post.id,
+        title: "MCP e2e test (edited)",
+        targets: [
+          {
+            channel_id: channel.id,
+            settings: { privacy_status: "private", privacy_level: "SELF_ONLY" },
+          },
+        ],
+        schedule_mode: "custom",
+        scheduled_at: at,
+      },
+    }),
+  );
+  const edited = parse(
+    await client.callTool({ name: "get_post_status", arguments: { post_id: created.post.id } }),
+  );
+  console.log(
+    "7b) update_post without body:", edited.post.title,
+    "| body kept:", edited.post.body === "created via MCP" ? "✓" : `LOST (${JSON.stringify(edited.post.body)})`,
+  );
+
+  const canceled = parse(
+    await client.callTool({ name: "cancel_post", arguments: { post_id: created.post.id } }),
+  );
+  console.log("7c) cancel_post:", canceled.canceled_targets.map((t: any) => t.status).join(","));
+  const again = await client.callTool({
+    name: "cancel_post",
+    arguments: { post_id: created.post.id },
+  });
+  console.log("7d) cancel_post twice:", again.isError ? "isError ✓ (not_scheduled)" : "FEHLT");
+
   // error path: bogus media id
   const bad = await client.callTool({
     name: "get_post_status",
