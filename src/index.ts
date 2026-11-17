@@ -264,14 +264,19 @@ server.registerTool(
     description:
       "Edit a post that has not gone out yet: title, body, per-channel settings, " +
       "schedule and which channels it targets. Send the FULL target list — " +
-      "channels you omit are removed from the post. The video cannot be changed. " +
+      "channels you omit are removed from the post. Omit body to keep the " +
+      "current caption; pass an empty string to clear it. The video cannot be changed. " +
       "Targets that already published stay untouched and keep their channel; if " +
       "every target has published the call fails with nothing_editable. Settings " +
       "follow the same shape as create_post.",
     inputSchema: {
       post_id: z.string().uuid(),
       title: z.string().min(1).max(150),
-      body: z.string().max(5000).optional().describe("Default caption/description for all channels"),
+      body: z
+        .string()
+        .max(5000)
+        .optional()
+        .describe("Default caption/description for all channels; omit to keep the current one"),
       targets: z
         .array(
           z.object({
@@ -294,7 +299,9 @@ server.registerTool(
           method: "PATCH",
           body: JSON.stringify({
             title,
-            body: body ?? "",
+            // Left out when not given: the API then keeps the stored caption.
+            // Sending "" here used to wipe it on every title-only edit.
+            ...(body !== undefined ? { body } : {}),
             targets: targets.map((t) => ({
               channel_id: t.channel_id,
               settings: t.settings ?? {},
@@ -333,6 +340,39 @@ server.registerTool(
     try {
       return ok(
         await api(`/posts/${post_id}/publish`, {
+          method: "POST",
+          body: JSON.stringify(channel_id ? { channel_id } : {}),
+        }),
+      );
+    } catch (error) {
+      return fail(error);
+    }
+  },
+);
+
+server.registerTool(
+  "cancel_post",
+  {
+    description:
+      "Cancel a scheduled post so it does not go out. Pass channel_id to cancel " +
+      "only that channel's target and leave the others scheduled. Only targets " +
+      "that are still scheduled can be canceled — one that is already publishing " +
+      "or published is past the point of no return, and the call fails with " +
+      "not_scheduled if nothing is left to cancel. The video and the post stay " +
+      "in the workspace.",
+    inputSchema: {
+      post_id: z.string().uuid(),
+      channel_id: z
+        .string()
+        .uuid()
+        .optional()
+        .describe("Limit to one channel; omit to cancel every scheduled target"),
+    },
+  },
+  async ({ post_id, channel_id }) => {
+    try {
+      return ok(
+        await api(`/posts/${post_id}/cancel`, {
           method: "POST",
           body: JSON.stringify(channel_id ? { channel_id } : {}),
         }),
